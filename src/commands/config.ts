@@ -18,6 +18,7 @@ export enum CONFIG_KEYS {
   OCO_TOKENS_MAX_INPUT = 'OCO_TOKENS_MAX_INPUT',
   OCO_TOKENS_MAX_OUTPUT = 'OCO_TOKENS_MAX_OUTPUT',
   OCO_OPENAI_BASE_PATH = 'OCO_OPENAI_BASE_PATH',
+  OCO_OPENAI_API_TYPE = 'OCO_OPENAI_API_TYPE',
   OCO_DESCRIPTION = 'OCO_DESCRIPTION',
   OCO_EMOJI = 'OCO_EMOJI',
   OCO_MODEL = 'OCO_MODEL',
@@ -55,16 +56,29 @@ export const configValidators = {
   [CONFIG_KEYS.OCO_OPENAI_API_KEY](value: any, config: any = {}) {
     //need api key unless running locally with ollama
     validateConfig('API_KEY', value || config.OCO_AI_PROVIDER == 'ollama', 'You need to provide an API key');
-    validateConfig(
-      CONFIG_KEYS.OCO_OPENAI_API_KEY,
-      value.startsWith('sk-'),
-      'Must start with "sk-"'
-    );
-    validateConfig(
-      CONFIG_KEYS.OCO_OPENAI_API_KEY,
-      config[CONFIG_KEYS.OCO_OPENAI_BASE_PATH] || value.length === 51,
-      'Must be 51 characters long'
-    );
+    if (config.OCO_OPENAI_API_TYPE === 'azure') {
+      validateConfig(
+        CONFIG_KEYS.OCO_OPENAI_API_KEY,
+        value.match(/^[a-z0-9]{32}$/),
+        'Must be a valid Azure API key'
+      );
+      validateConfig(
+        CONFIG_KEYS.OCO_OPENAI_API_KEY,
+        config[CONFIG_KEYS.OCO_OPENAI_BASE_PATH] || value.length === 32,
+        'Must be 32 characters long'
+      );
+    } else {
+      validateConfig(
+        CONFIG_KEYS.OCO_OPENAI_API_KEY,
+        value.startsWith('sk-'),
+        'Must start with "sk-"'
+      );
+      validateConfig(
+        CONFIG_KEYS.OCO_OPENAI_API_KEY,
+        config[CONFIG_KEYS.OCO_OPENAI_BASE_PATH] || value.length === 51,
+        'Must be 51 characters long'
+      );
+    }
 
     return value;
   },
@@ -145,18 +159,49 @@ export const configValidators = {
     return value;
   },
 
-  [CONFIG_KEYS.OCO_MODEL](value: any) {
+  [CONFIG_KEYS.OCO_OPENAI_API_TYPE](value: any) {
     validateConfig(
-      CONFIG_KEYS.OCO_MODEL,
-      [
-        'gpt-3.5-turbo',
-        'gpt-4',
-        'gpt-3.5-turbo-16k',
-        'gpt-3.5-turbo-0613',
-        'gpt-4-1106-preview'
-      ].includes(value),
-      `${value} is not supported yet, use 'gpt-4', 'gpt-3.5-turbo-16k' (default), 'gpt-3.5-turbo-0613', 'gpt-3.5-turbo' or 'gpt-4-1106-preview'`
+      CONFIG_KEYS.OCO_OPENAI_API_TYPE,
+      typeof value === 'string',
+      'Must be string'
     );
+    validateConfig(
+      CONFIG_KEYS.OCO_OPENAI_API_TYPE,
+      [
+        '',
+        'azure',
+        'openai'
+      ].includes(value),
+      `${value} is not supported yet, use 'azure' or 'openai' (default)`
+    );
+    return value;
+  },
+
+  [CONFIG_KEYS.OCO_MODEL](value: any, config: any = {}) {
+    if (config.OCO_OPENAI_API_TYPE === 'azure') {
+      validateConfig(
+        CONFIG_KEYS.OCO_MODEL,
+        typeof value === 'string',
+        'Must be string'
+      );
+      validateConfig(
+        CONFIG_KEYS.OCO_MODEL,
+        value.match(/^[a-zA-Z0-9~\-]{1,63}[a-zA-Z0-9]$/),
+        'Must be a valid Azure model'
+      )
+    } else {
+      validateConfig(
+        CONFIG_KEYS.OCO_MODEL,
+        [
+          'gpt-3.5-turbo',
+          'gpt-4',
+          'gpt-3.5-turbo-16k',
+          'gpt-3.5-turbo-0613',
+          'gpt-4-1106-preview'
+        ].includes(value),
+        `${value} is not supported yet, use 'gpt-4', 'gpt-3.5-turbo-16k' (default), 'gpt-3.5-turbo-0613', 'gpt-3.5-turbo' or 'gpt-4-1106-preview'`
+      );
+    }
     return value;
   },
   [CONFIG_KEYS.OCO_MESSAGE_TEMPLATE_PLACEHOLDER](value: any) {
@@ -208,6 +253,7 @@ export const getConfig = (): ConfigType | null => {
       ? Number(process.env.OCO_TOKENS_MAX_OUTPUT)
       : undefined,
     OCO_OPENAI_BASE_PATH: process.env.OCO_OPENAI_BASE_PATH,
+    OCO_OPENAI_API_TYPE: process.env.OCO_OPENAI_API_TYPE,
     OCO_DESCRIPTION: process.env.OCO_DESCRIPTION === 'true' ? true : false,
     OCO_EMOJI: process.env.OCO_EMOJI === 'true' ? true : false,
     OCO_MODEL: process.env.OCO_MODEL || 'gpt-3.5-turbo-16k',

@@ -1,4 +1,4 @@
-import axios, { AxiosError } from 'axios';
+import axios from 'axios';
 import { ChatCompletionRequestMessage } from 'openai';
 import { AiEngine } from './Engine';
 

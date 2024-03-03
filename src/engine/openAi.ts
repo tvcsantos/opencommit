@@ -1,6 +1,5 @@
 import axios from 'axios';
 import chalk from 'chalk';
-import { execa } from 'execa';
 import {
   ChatCompletionRequestMessage,
   Configuration as OpenAiApiConfiguration,
@@ -22,8 +21,9 @@ const config = getConfig();
 
 const MAX_TOKENS_OUTPUT = config?.OCO_TOKENS_MAX_OUTPUT || DEFAULT_TOKEN_LIMITS.DEFAULT_MAX_TOKENS_OUTPUT;
 const MAX_TOKENS_INPUT = config?.OCO_TOKENS_MAX_INPUT || DEFAULT_TOKEN_LIMITS.DEFAULT_MAX_TOKENS_INPUT;
-let basePath = config?.OCO_OPENAI_BASE_PATH;
-let apiKey = config?.OCO_OPENAI_API_KEY
+const basePath = config?.OCO_OPENAI_BASE_PATH;
+const apiKey = config?.OCO_OPENAI_API_KEY
+const apiType = config?.OCO_OPENAI_API_TYPE || 'openai'
 
 const [command, mode] = process.argv.slice(2);
 
@@ -52,8 +52,26 @@ class OpenAi implements AiEngine {
   private openAI!: OpenAIApi;
 
   constructor() {
-    if (basePath) {
-      this.openAiApiConfiguration.basePath = basePath;
+    switch (apiType) {
+      case 'azure':
+        this.openAiApiConfiguration.baseOptions =  {
+          headers: {
+            'api-key': apiKey,
+          },
+          params: {
+            'api-version': '2023-07-01-preview',
+          }
+        };
+        if (basePath) {
+          this.openAiApiConfiguration.basePath = basePath + 'openai/deployments/' + MODEL;
+        }
+        break;
+      case 'openai':
+      default:
+        if (basePath) {
+          this.openAiApiConfiguration.basePath = basePath;
+        }
+        break;
     }
     this.openAI = new OpenAIApi(this.openAiApiConfiguration);
   }
