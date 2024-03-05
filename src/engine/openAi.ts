@@ -24,6 +24,7 @@ const MAX_TOKENS_INPUT = config?.OCO_TOKENS_MAX_INPUT || DEFAULT_TOKEN_LIMITS.DE
 const basePath = config?.OCO_OPENAI_BASE_PATH;
 const apiKey = config?.OCO_OPENAI_API_KEY
 const apiType = config?.OCO_OPENAI_API_TYPE || 'openai'
+const azureApiVersion = config?.OCO_OPENAI_AZURE_API_VERSION
 
 const [command, mode] = process.argv.slice(2);
 
@@ -59,7 +60,7 @@ class OpenAi implements AiEngine {
             'api-key': apiKey,
           },
           params: {
-            'api-version': '2023-07-01-preview',
+            'api-version': azureApiVersion,
           }
         };
         if (basePath) {

@@ -24262,6 +24262,21 @@ var configValidators = {
     );
     return value;
   },
+  ["OCO_OPENAI_AZURE_API_VERSION" /* OCO_OPENAI_AZURE_API_VERSION */](value, config7 = {}) {
+    validateConfig(
+      "OCO_OPENAI_AZURE_API_VERSION" /* OCO_OPENAI_AZURE_API_VERSION */,
+      typeof value === "string",
+      "Must be string"
+    );
+    if (config7.OCO_OPENAI_API_TYPE === "azure") {
+      validateConfig(
+        "OCO_OPENAI_AZURE_API_VERSION" /* OCO_OPENAI_AZURE_API_VERSION */,
+        value !== "" && value !== void 0 && value !== null,
+        "When using Azure, you must provide an API version"
+      );
+    }
+    return value;
+  },
   ["OCO_MODEL" /* OCO_MODEL */](value, config7 = {}) {
     if (config7.OCO_OPENAI_API_TYPE === "azure") {
       validateConfig(
@@ -24326,6 +24341,7 @@ var getConfig = () => {
     OCO_TOKENS_MAX_OUTPUT: process.env.OCO_TOKENS_MAX_OUTPUT ? Number(process.env.OCO_TOKENS_MAX_OUTPUT) : void 0,
     OCO_OPENAI_BASE_PATH: process.env.OCO_OPENAI_BASE_PATH,
     OCO_OPENAI_API_TYPE: process.env.OCO_OPENAI_API_TYPE,
+    OCO_OPENAI_AZURE_API_VERSION: process.env.OCO_OPENAI_AZURE_API_VERSION,
     OCO_DESCRIPTION: process.env.OCO_DESCRIPTION === "true" ? true : false,
     OCO_EMOJI: process.env.OCO_EMOJI === "true" ? true : false,
     OCO_MODEL: process.env.OCO_MODEL || "gpt-3.5-turbo-16k",
@@ -27460,6 +27476,7 @@ var MAX_TOKENS_INPUT = config3?.OCO_TOKENS_MAX_INPUT || 4096 /* DEFAULT_MAX_TOKE
 var basePath = config3?.OCO_OPENAI_BASE_PATH;
 var apiKey = config3?.OCO_OPENAI_API_KEY;
 var apiType = config3?.OCO_OPENAI_API_TYPE || "openai";
+var azureApiVersion = config3?.OCO_OPENAI_AZURE_API_VERSION;
 var [command, mode] = process.argv.slice(2);
 var isLocalModel = config3?.OCO_AI_PROVIDER == "ollama";
 if (!apiKey && command !== "config" && mode !== "set" /* set */ && !isLocalModel) {
@@ -27486,7 +27503,7 @@ var OpenAi = class {
             "api-key": apiKey
           },
           params: {
-            "api-version": "2023-07-01-preview"
+            "api-version": azureApiVersion
           }
         };
         if (basePath) {

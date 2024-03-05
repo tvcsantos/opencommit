@@ -19,6 +19,7 @@ export enum CONFIG_KEYS {
   OCO_TOKENS_MAX_OUTPUT = 'OCO_TOKENS_MAX_OUTPUT',
   OCO_OPENAI_BASE_PATH = 'OCO_OPENAI_BASE_PATH',
   OCO_OPENAI_API_TYPE = 'OCO_OPENAI_API_TYPE',
+  OCO_OPENAI_AZURE_API_VERSION = 'OCO_OPENAI_AZURE_API_VERSION',
   OCO_DESCRIPTION = 'OCO_DESCRIPTION',
   OCO_EMOJI = 'OCO_EMOJI',
   OCO_MODEL = 'OCO_MODEL',
@@ -177,6 +178,22 @@ export const configValidators = {
     return value;
   },
 
+  [CONFIG_KEYS.OCO_OPENAI_AZURE_API_VERSION](value: any, config: any = {}) {
+    validateConfig(
+      CONFIG_KEYS.OCO_OPENAI_AZURE_API_VERSION,
+      typeof value === 'string',
+      'Must be string'
+    );
+    if (config.OCO_OPENAI_API_TYPE === 'azure') {
+      validateConfig(
+        CONFIG_KEYS.OCO_OPENAI_AZURE_API_VERSION,
+        value !== '' && value !== undefined && value !== null,
+        'When using Azure, you must provide an API version'
+      );
+    }
+    return value;
+  },
+
   [CONFIG_KEYS.OCO_MODEL](value: any, config: any = {}) {
     if (config.OCO_OPENAI_API_TYPE === 'azure') {
       validateConfig(
@@ -254,6 +271,7 @@ export const getConfig = (): ConfigType | null => {
       : undefined,
     OCO_OPENAI_BASE_PATH: process.env.OCO_OPENAI_BASE_PATH,
     OCO_OPENAI_API_TYPE: process.env.OCO_OPENAI_API_TYPE,
+    OCO_OPENAI_AZURE_API_VERSION: process.env.OCO_OPENAI_AZURE_API_VERSION,
     OCO_DESCRIPTION: process.env.OCO_DESCRIPTION === 'true' ? true : false,
     OCO_EMOJI: process.env.OCO_EMOJI === 'true' ? true : false,
     OCO_MODEL: process.env.OCO_MODEL || 'gpt-3.5-turbo-16k',
